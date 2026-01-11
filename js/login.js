@@ -6,43 +6,38 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
     const errorDiv = document.getElementById("error");
     const submitBtn = e.target.querySelector("button");
 
-    // 1. تغيير حالة الزر
     submitBtn.innerText = "⏳ جاري الاتصال...";
     submitBtn.disabled = true;
     errorDiv.style.display = "none";
 
-    console.log("🚀 جاري إرسال الطلب إلى:", `${CONFIG.API_BASE_URL}/login`);
+    // تأكد أن المسار مطابق لما في السيرفر وهو /api/login
+    const LOGIN_URL = `${CONFIG.API_BASE_URL}/api/login`;
 
     try {
-        // 2. إرسال الطلب مع الهيدر الضروري لـ Ngrok
-        const response = await fetch(`${CONFIG.API_BASE_URL}/login`, {
+        const response = await fetch(LOGIN_URL, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "ngrok-skip-browser-warning": "true", // <--- هذا هو الحل لمشاكل الاتصال عبر ngrok
+                "ngrok-skip-browser-warning": "true",
             },
             body: JSON.stringify({ email, password }),
+            // هذه الخاصية هي المسؤولة عن تخزين الـ Session Cookie القادم من السيرفر
             credentials: "include",
         });
 
-        console.log("📡 حالة الاستجابة:", response.status);
-
-        // محاولة قراءة الرد كـ JSON
         const data = await response.json();
-        console.log("📦 البيانات المستلمة:", data);
 
         if (data.success) {
-            console.log("✅ دخول ناجح! جاري التحويل...");
+            // تخزين بيانات المستخدم للاستخدام السريع في الواجهة
             localStorage.setItem("user", JSON.stringify(data.user));
+
+            // التحويل للوحة التحكم
             window.location.href =
                 "https://ahmedhm1.github.io/Peeka-book/dashboard.html";
         } else {
             throw new Error(data.message || "بيانات الدخول غير صحيحة");
         }
     } catch (error) {
-        console.error("❌ حدث خطأ:", error);
-
-        // عرض الخطأ للمستخدم وإعادة تفعيل الزر
         errorDiv.innerText = error.message || "فشل الاتصال بالسيرفر";
         errorDiv.style.display = "block";
         submitBtn.innerText = "دخول";

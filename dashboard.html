@@ -358,20 +358,17 @@
 
         async function init() {
             try {
-                console.log("جاري الاتصال بـ:", DATA_ENDPOINT);
-
                 const response = await fetch(DATA_ENDPOINT, {
                     method: 'GET',
+                    credentials: 'include', // <--- هذا السطر هو مفتاح الحل
                     headers: {
                         'Accept': 'application/json',
-                        // السطر القادم هو الحل السحري لمشكلة Ngrok
                         'ngrok-skip-browser-warning': 'true'
                     }
                 });
 
-                // 1. التعامل مع حالات تسجيل الدخول أو المسارات الخاطئة
-                if (response.status === 401 || response.status === 404) {
-                    console.warn("Unauthorized or Not Found. Redirecting to Login...");
+                if (response.status === 401) {
+                    console.warn("Unauthorized. Redirecting to Login...");
                     window.location.href = "https://ahmedhm1.github.io/Peeka-book/login.html";
                     return;
                 }
