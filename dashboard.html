@@ -358,28 +358,33 @@
 
         async function init() {
             try {
-                console.log("Fetching from:", DATA_ENDPOINT);
+                console.log("جاري الاتصال بـ:", DATA_ENDPOINT);
+
                 const response = await fetch(DATA_ENDPOINT, {
                     method: 'GET',
                     headers: {
-                        'Accept': 'application/json' // بنقول للسيرفر إحنا عايزين JSON بس
+                        'Accept': 'application/json',
+                        // السطر القادم هو الحل السحري لمشكلة Ngrok
+                        'ngrok-skip-browser-warning': 'true'
                     }
                 });
 
-                // 1. لو السيرفر رجع 404 أو 401، حوله لصفحة تسجيل الدخول فوراً
+                // 1. التعامل مع حالات تسجيل الدخول أو المسارات الخاطئة
                 if (response.status === 401 || response.status === 404) {
-                    window.location.href = "https://ahmedhm1.github.io/Peeka-book/login.html";
+                    console.warn("Unauthorized or Not Found. Redirecting to Login...");
+                    window.location.href = "https://ahmedhm1.github.io/Peeka-book/index.html";
                     return;
                 }
 
-                // 2. فحص نوع الرد (Content-Type)
+                // 2. التأكد أن الرد هو فعلاً JSON وليس صفحة HTML
                 const contentType = response.headers.get("content-type");
                 if (!contentType || !contentType.includes("application/json")) {
-                    // لو الرد مش JSON يبقى غالباً السيرفر بعت صفحة غلط أو فيه error HTML
-                    throw new TypeError("Oops, we didn't get JSON from the server!");
+                    const rawText = await response.text();
+                    console.error("وصل رد غير متوقع من السيرفر (ليس JSON):", rawText);
+                    throw new TypeError("السيرفر أرسل بيانات بصيغة خاطئة (HTML بدلاً من JSON)");
                 }
 
-                // 3. الآن نقدر نحول الرد لـ JSON بأمان
+                // 3. قراءة البيانات بنجاح
                 globalData = await response.json();
 
                 renderNavbar();
@@ -390,13 +395,12 @@
 
             } catch (error) {
                 console.error('Error fetching data:', error);
-                // عرض رسالة واضحة للمستخدم
                 document.getElementById('page-loader').innerHTML = `
-            <div style="text-align:center; padding: 20px;">
+            <div style="text-align:center; padding: 20px; direction: rtl;">
                 <i class="fas fa-plug fa-3x" style="color:#6c5ce7; margin-bottom:15px;"></i>
-                <p>السيرفر لا يستجيب بشكل صحيح حالياً.</p>
-                <p style="font-size:0.8rem; color:#666;">${error.message}</p>
-                <button onclick="location.reload()" class="action-btn" style="width:auto">إعادة محاولة</button>
+                <h3 style="color:red;">فشل الاتصال بالذكاء الاصطناعي</h3>
+                <p>${error.message}</p>
+                <button onclick="location.reload()" class="action-btn" style="width:auto; padding: 10px 20px;">إعادة محاولة</button>
             </div>
         `;
             }
