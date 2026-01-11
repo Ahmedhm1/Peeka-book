@@ -397,21 +397,43 @@
             <div class="card">
                 <div style="text-align:center; margin-bottom:30px;">
                     <h1 style="color:var(--primary);">✨ ابدأ رحلة خيالية جديدة</h1>
-                    <p style="color:#636e72;">أدخل بيانات طفلك وسيقوم الذكاء الاصطناعي بتأليف ورسم القصة.</p>
+                    <p style="color:#636e72;">أدخل بيانات طفلك وسيقوم الذكاء الاصطناعي بتأليف ورسم القصة بالكامل.</p>
                 </div>
+
                 <form id="createStoryForm" onsubmit="handleCreateStory(event)">
                     <div class="form-grid">
-                        <div class="input-group"><label>اسم الطفل</label><input type="text" name="childName" required></div>
-                        <div class="input-group"><label>العمر</label><input type="number" name="age" required></div>
+                        <div class="input-group">
+                            <label><i class="fas fa-child"></i> اسم الطفل</label>
+                            <input type="text" name="childName" required placeholder="مثال: عمر">
+                        </div>
+                        <div class="input-group">
+                            <label><i class="fas fa-birthday-cake"></i> العمر</label>
+                            <input type="number" name="age" required placeholder="مثال: 5">
+                        </div>
                     </div>
-                    <div class="input-group"><label>موضوع القصة</label><input type="text" name="theme" required></div>
+
+                    <div class="input-group">
+                        <label><i class="fas fa-hat-wizard"></i> موضوع القصة</label>
+                        <input type="text" name="theme" required placeholder="مثال: رحلة إلى كوكب الحلوى مع ديناصور طيب">
+                    </div>
+
                     <div class="form-grid">
-                        <div class="input-group"><label>صورة الطفل</label><input type="file" name="childImage" accept="image/*"></div>
-                        <div class="input-group"><label>عدد المشاهد</label><input type="number" name="scenesCount" value="5" min="1" max="20"></div>
+                        <div class="input-group">
+                            <label><i class="fas fa-camera"></i> صورة الطفل (لدمج وجهه)</label>
+                            <input type="file" name="childImage" accept="image/*" style="padding:9px;">
+                        </div>
+                        <div class="input-group">
+                            <label><i class="fas fa-layer-group"></i> عدد المشاهد</label>
+                            <input type="number" name="scenesCount" required min="1" max="20" value="5" placeholder="أدخل عدد المشاهد (مثال: 4)">
+                        </div>
                     </div>
-                    <button type="submit" class="action-btn"><i class="fas fa-magic"></i> تأليف القصة الآن</button>
+
+                    <button type="submit" class="action-btn">
+                        <i class="fas fa-magic"></i> تأليف القصة الآن
+                    </button>
                 </form>
-            </div>`;
+            </div>
+            `;
         }
 
         function getStatusTrackerHTML(status) {
@@ -526,6 +548,9 @@
         }
 
         function handleLogout() {
+            // مسح بيانات المستخدم من المتصفح
+            localStorage.removeItem("user");
+            // التوجه لصفحة البداية
             window.location.href = "https://ahmedhm1.github.io/Peeka-book/index.html";
         }
     </script>
