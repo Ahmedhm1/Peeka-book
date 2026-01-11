@@ -60,6 +60,8 @@
             transition: 0.3s;
             font-size: 0.9rem;
             font-weight: bold;
+            cursor: pointer;
+            border: none;
         }
 
         .logout-btn:hover {
@@ -83,7 +85,7 @@
         .step {
             text-align: center;
             flex: 1;
-            opacity: 0.5;
+            opacity: 0.3;
             transition: 0.3s;
             z-index: 2;
         }
@@ -129,9 +131,7 @@
             color: #636e72;
         }
 
-        input,
-        select,
-        textarea {
+        input, select, textarea {
             width: 100%;
             padding: 12px;
             border: 2px solid #dfe6e9;
@@ -141,8 +141,7 @@
             box-sizing: border-box;
         }
 
-        input:focus,
-        textarea:focus {
+        input:focus, textarea:focus {
             border-color: var(--primary);
             outline: none;
         }
@@ -168,9 +167,10 @@
         }
 
         button:disabled {
-            background: #ccc;
+            background: #ccc !important;
             cursor: not-allowed;
-            transform: none;
+            transform: none !important;
+            box-shadow: none !important;
         }
 
         /* --- Scene Review --- */
@@ -182,35 +182,7 @@
             border-right: 5px solid var(--primary);
         }
 
-        .scene-box h4 {
-            margin-top: 0;
-            color: var(--primary);
-        }
-
         /* --- Image Selection Grid --- */
-        .selection-container {
-            margin-bottom: 40px;
-        }
-
-        .scene-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .scene-number {
-            background: var(--primary);
-            color: white;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-        }
-
         .images-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -231,10 +203,6 @@
             height: 150px;
             object-fit: cover;
             display: block;
-        }
-
-        .img-option:hover {
-            transform: scale(1.02);
         }
 
         .img-option.selected {
@@ -258,12 +226,6 @@
             font-weight: bold;
         }
 
-        /* --- Loader --- */
-        .loader-container {
-            text-align: center;
-            padding: 50px;
-        }
-
         .spinner {
             width: 50px;
             height: 50px;
@@ -274,35 +236,12 @@
             margin: 0 auto 20px;
         }
 
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Loading Overlay for Initial Fetch */
         #page-loader {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             background: var(--bg);
             z-index: 9999;
             display: flex;
@@ -329,21 +268,17 @@
                     <small style="color:#636e72">مرحباً، <span id="user-name-display">...</span></small>
                 </div>
             </div>
-            <a href="#" onclick="handleLogout()" class="logout-btn">
+            <button onclick="handleLogout()" class="logout-btn">
                 <i class="fas fa-sign-out-alt"></i> خروج
-            </a>
+            </button>
         </div>
 
         <div id="app-content"></div>
-
     </div>
 
     <script>
         // === Configuration ===
-        // تأكد من أن هذا الرابط يعمل ويرد بـ CORS Headers مسموحة
         const API_BASE = "https://haughtiest-dressier-cheyenne.ngrok-free.dev";
-
-        // نقطة الاتصال الجديدة التي يجب إنشاؤها في الباك إند
         const DATA_ENDPOINT = `${API_BASE}/api/dashboard-data`;
 
         let globalData = {
@@ -360,7 +295,7 @@
             try {
                 const response = await fetch(DATA_ENDPOINT, {
                     method: 'GET',
-                    credentials: 'include', // <--- هذا السطر هو مفتاح الحل
+                    credentials: 'include', // مهم جداً لنقل الجلسة
                     headers: {
                         'Accept': 'application/json',
                         'ngrok-skip-browser-warning': 'true'
@@ -368,20 +303,15 @@
                 });
 
                 if (response.status === 401) {
-                    console.warn("Unauthorized. Redirecting to Login...");
-                    window.location.href = "https://ahmedhm1.github.io/Peeka-book/login.html";
+                    window.location.href = "https://ahmedhm1.github.io/Peeka-book/index.html";
                     return;
                 }
 
-                // 2. التأكد أن الرد هو فعلاً JSON وليس صفحة HTML
                 const contentType = response.headers.get("content-type");
                 if (!contentType || !contentType.includes("application/json")) {
-                    const rawText = await response.text();
-                    console.error("وصل رد غير متوقع من السيرفر (ليس JSON):", rawText);
-                    throw new TypeError("السيرفر أرسل بيانات بصيغة خاطئة (HTML بدلاً من JSON)");
+                    throw new TypeError("لم يتم استلام بيانات JSON من السيرفر!");
                 }
 
-                // 3. قراءة البيانات بنجاح
                 globalData = await response.json();
 
                 renderNavbar();
@@ -391,19 +321,16 @@
                 document.getElementById('main-container').style.display = 'block';
 
             } catch (error) {
-                console.error('Error fetching data:', error);
+                console.error('Error:', error);
                 document.getElementById('page-loader').innerHTML = `
-            <div style="text-align:center; padding: 20px; direction: rtl;">
-                <i class="fas fa-plug fa-3x" style="color:#6c5ce7; margin-bottom:15px;"></i>
-                <h3 style="color:red;">فشل الاتصال بالذكاء الاصطناعي</h3>
-                <p>${error.message}</p>
-                <button onclick="location.reload()" class="action-btn" style="width:auto; padding: 10px 20px;">إعادة محاولة</button>
-            </div>
-        `;
+                    <div style="text-align:center; padding:20px;">
+                        <i class="fas fa-plug fa-3x" style="color:red; margin-bottom:15px;"></i>
+                        <p>فشل الاتصال بالسيرفر. تأكد من تشغيل الباك إند.</p>
+                        <button onclick="location.reload()" class="action-btn" style="width:auto">إعادة محاولة</button>
+                    </div>
+                `;
             }
         }
-
-        // === Render Functions ===
 
         function renderNavbar() {
             const name = globalData.user?.name || globalData.user?.email || 'زائر';
@@ -412,324 +339,170 @@
 
         function renderContent() {
             const container = document.getElementById('app-content');
-            container.innerHTML = ''; // Clear content
+            container.innerHTML = '';
 
-            const story = globalData.story;
-            const scenes = globalData.scenes;
-            const candidates = globalData.candidates;
+            const { story, scenes, candidates } = globalData;
 
-            // Scenario 1: No active story or Story Completed (Show New Story Form)
             if (!story || story.status === 'completed') {
                 container.innerHTML = getNewStoryFormHTML();
                 return;
             }
 
-            // Scenario 2: Active Story (Show Status Tracker + Specific Phase)
             const trackerHTML = getStatusTrackerHTML(story.status);
             let phaseHTML = '';
 
-            if (story.status === 'text_review') {
-                phaseHTML = getTextReviewHTML(story, scenes);
-            } else if (story.status === 'ready_for_images') {
-                phaseHTML = getReadyForImagesHTML(story);
-            } else if (story.status === 'generating') {
-                phaseHTML = getGeneratingLoaderHTML();
-            } else if (story.status === 'selection_phase') {
-                phaseHTML = getSelectionPhaseHTML(scenes, candidates, story.id);
-            } else if (story.status === 'completed') {
-                // Usually handled by Scenario 1 unless we want to show result immediately
-                // For now, let's just stick to the original logic
+            switch (story.status) {
+                case 'text_review': phaseHTML = getTextReviewHTML(story, scenes); break;
+                case 'ready_for_images': phaseHTML = getReadyForImagesHTML(story); break;
+                case 'generating': phaseHTML = getGeneratingLoaderHTML(); break;
+                case 'selection_phase': phaseHTML = getSelectionPhaseHTML(scenes, candidates, story.id); break;
             }
 
             container.innerHTML = trackerHTML + phaseHTML;
 
-            // Auto reload logic for generating phase
             if (story.status === 'generating') {
                 setTimeout(() => init(), 8000);
             }
         }
 
-        // --- HTML Generators (Template Literals replacing EJS) ---
+        // --- HTML Templates ---
 
         function getNewStoryFormHTML() {
             return `
             <div class="card">
                 <div style="text-align:center; margin-bottom:30px;">
                     <h1 style="color:var(--primary);">✨ ابدأ رحلة خيالية جديدة</h1>
-                    <p style="color:#636e72;">أدخل بيانات طفلك وسيقوم الذكاء الاصطناعي بتأليف ورسم القصة بالكامل.</p>
+                    <p style="color:#636e72;">أدخل بيانات طفلك وسيقوم الذكاء الاصطناعي بتأليف ورسم القصة.</p>
                 </div>
-
                 <form id="createStoryForm" onsubmit="handleCreateStory(event)">
                     <div class="form-grid">
-                        <div class="input-group">
-                            <label><i class="fas fa-child"></i> اسم الطفل</label>
-                            <input type="text" name="childName" required placeholder="مثال: عمر">
-                        </div>
-                        <div class="input-group">
-                            <label><i class="fas fa-birthday-cake"></i> العمر</label>
-                            <input type="number" name="age" required placeholder="مثال: 5">
-                        </div>
+                        <div class="input-group"><label>اسم الطفل</label><input type="text" name="childName" required></div>
+                        <div class="input-group"><label>العمر</label><input type="number" name="age" required></div>
                     </div>
-
-                    <div class="input-group">
-                        <label><i class="fas fa-hat-wizard"></i> موضوع القصة</label>
-                        <input type="text" name="theme" required placeholder="مثال: رحلة إلى كوكب الحلوى مع ديناصور طيب">
-                    </div>
-
+                    <div class="input-group"><label>موضوع القصة</label><input type="text" name="theme" required></div>
                     <div class="form-grid">
-                        <div class="input-group">
-                            <label><i class="fas fa-camera"></i> صورة الطفل (لدمج وجهه)</label>
-                            <input type="file" name="childImage" accept="image/*" style="padding:9px;">
-                        </div>
-                        <div class="input-group">
-                            <label><i class="fas fa-layer-group"></i> عدد المشاهد</label>
-                            <input type="number" name="scenesCount" required min="1" max="20" value="5" placeholder="أدخل عدد المشاهد (مثال: 4)">
-                        </div>
+                        <div class="input-group"><label>صورة الطفل</label><input type="file" name="childImage" accept="image/*"></div>
+                        <div class="input-group"><label>عدد المشاهد</label><input type="number" name="scenesCount" value="5" min="1" max="20"></div>
                     </div>
-
-                    <button type="submit" class="action-btn">
-                        <i class="fas fa-magic"></i> تأليف القصة الآن
-                    </button>
+                    <button type="submit" class="action-btn"><i class="fas fa-magic"></i> تأليف القصة الآن</button>
                 </form>
-            </div>
-            `;
+            </div>`;
         }
 
-        function getStatusTrackerHTML(currentStatus) {
-            const steps = ['text_review', 'ready_for_images', 'generating', 'selection_phase', 'completed'];
-            const labels = {
-                'text_review': { icon: 'pen-fancy', text: 'التأليف' },
-                'ready_for_images': { icon: 'check-double', text: 'المراجعة' },
-                'generating': { icon: 'palette', text: 'الرسم' },
-                'selection_phase': { icon: 'images', text: 'الاختيار' }
-            };
-
-            // Helper to check if step is active (current or passed)
-            const isActive = (stepKey, current) => {
-                // Simple logic: if the current status index is >= step index
-                // Note: The original EJS had specific arrays. Simplifying here for display.
-                const map = ['text_review', 'ready_for_images', 'generating', 'selection_phase', 'completed'];
-                return map.indexOf(current) >= map.indexOf(stepKey) ? 'active' : '';
-            };
-
+        function getStatusTrackerHTML(status) {
+            const map = ['text_review', 'ready_for_images', 'generating', 'selection_phase', 'completed'];
+            const active = (s) => map.indexOf(status) >= map.indexOf(s) ? 'active' : '';
             return `
             <div class="status-tracker">
-                <div class="step ${isActive('text_review', currentStatus)}">
-                    <i class="fas fa-pen-fancy"></i> التأليف
-                </div>
-                <div class="step ${isActive('ready_for_images', currentStatus)}">
-                    <i class="fas fa-check-double"></i> المراجعة
-                </div>
-                <div class="step ${isActive('generating', currentStatus)}">
-                    <i class="fas fa-palette"></i> الرسم
-                </div>
-                <div class="step ${isActive('selection_phase', currentStatus)}">
-                    <i class="fas fa-images"></i> الاختيار
-                </div>
-            </div>
-            `;
+                <div class="step ${active('text_review')}"><i class="fas fa-pen-fancy"></i> التأليف</div>
+                <div class="step ${active('ready_for_images')}"><i class="fas fa-check-double"></i> المراجعة</div>
+                <div class="step ${active('generating')}"><i class="fas fa-palette"></i> الرسم</div>
+                <div class="step ${active('selection_phase')}"><i class="fas fa-images"></i> الاختيار</div>
+            </div>`;
         }
 
         function getTextReviewHTML(story, scenes) {
-            let scenesHTML = scenes.map(scene => `
+            const scenesHTML = scenes.map(s => `
                 <div class="scene-box">
-                    <h4><i class="fas fa-bookmark"></i> مشهد ${scene.scene_number}</h4>
-                    <textarea name="scene_${scene.id}" rows="3">${scene.scene_text}</textarea>
-                </div>
-            `).join('');
-
+                    <h4>مشهد ${s.scene_number}</h4>
+                    <textarea name="scene_${s.id}" rows="3">${s.scene_text}</textarea>
+                </div>`).join('');
             return `
             <div class="card">
-                <h2 style="margin-bottom:20px; color:var(--primary);"><i class="fas fa-edit"></i> مراجعة القصة</h2>
-                <p style="margin-bottom:30px;">قام الذكاء الاصطناعي بتأليف هذه القصة. يمكنك تعديل أي جزء قبل البدء في الرسم.</p>
+                <h2><i class="fas fa-edit"></i> مراجعة القصة</h2>
                 <form id="textReviewForm">
                     <input type="hidden" name="storyId" value="${story.id}">
                     ${scenesHTML}
-                    <button type="button" onclick="approveTexts()" class="action-btn">
-                        <i class="fas fa-check-circle"></i> اعتماد النصوص وبدء التحضير للصور
-                    </button>
+                    <button type="button" onclick="approveTexts()" class="action-btn">اعتماد النصوص</button>
                 </form>
-            </div>
-            `;
+            </div>`;
         }
 
         function getReadyForImagesHTML(story) {
             return `
             <div class="card" style="text-align:center; padding:60px;">
                 <i class="fas fa-wand-magic-sparkles fa-4x" style="color:var(--accent); margin-bottom:20px;"></i>
-                <h2>تم تجهيز وصف المشاهد!</h2>
-                <p>سيقوم النظام الآن بإرسال الأوامر لسيرفر الرسم (Google Colab) لإنتاج 4 نسخ لكل مشهد.</p>
-                <button onclick="startImageGen(${story.id})" class="action-btn" style="background:var(--accent); width:auto; padding:15px 50px;">
-                    <i class="fas fa-play"></i> ابدأ رسم الصور
-                </button>
-            </div>
-            `;
+                <h2>تم تجهيز الوصف!</h2>
+                <button onclick="startImageGen(${story.id})" class="action-btn" style="width:auto; padding:15px 50px;">ابدأ الرسم</button>
+            </div>`;
         }
 
         function getGeneratingLoaderHTML() {
-            return `
-            <div class="card loader-container">
-                <div class="spinner"></div>
-                <h3>🎨 الفنان الآلي يعمل الآن...</h3>
-                <p>يتم رسم المشاهد بدقة عالية. هذه العملية قد تستغرق بضعة دقائق.</p>
-                <p style="color:#636e72; font-size:0.9rem;">سيتم تحديث الصفحة تلقائياً عند الانتهاء.</p>
-            </div>
-            `;
+            return `<div class="card" style="text-align:center; padding:50px;"><div class="spinner"></div><h3>🎨 يتم الآن رسم المشاهد...</h3></div>`;
         }
 
         function getSelectionPhaseHTML(scenes, candidates, storyId) {
-            let scenesHTML = scenes.map(scene => {
-                const sceneCandidates = candidates[scene.id] || [];
-
-                let imagesHTML = '';
-                if (sceneCandidates.length > 0) {
-                    imagesHTML = sceneCandidates.map(img => `
-                        <div class="img-option ${scene.selected_candidate_id == img.id ? 'selected' : ''}"
-                             onclick="selectImage(${scene.id}, ${img.id}, '${img.image_url}', this)">
-                            <img src="${img.image_url}" loading="lazy">
-                        </div>
-                    `).join('');
-                } else {
-                    imagesHTML = `
-                        <div style="background:#eee; padding:20px; border-radius:10px; text-align:center; grid-column:1/-1;">
-                            لم تصل الصور لهذا المشهد بعد
-                        </div>`;
-                }
-
-                return `
-                <div class="selection-container">
-                    <div class="scene-header">
-                        <div class="scene-number">${scene.scene_number}</div>
-                        <div>
-                            <h4 style="margin:0;">${scene.scene_text.substring(0, 80)}...</h4>
-                        </div>
-                    </div>
-                    <div class="images-grid">
-                        ${imagesHTML}
-                    </div>
-                </div>
-                <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
-                `;
+            const html = scenes.map(s => {
+                const cands = candidates[s.id] || [];
+                const imgs = cands.map(c => `
+                    <div class="img-option ${s.selected_candidate_id == c.id ? 'selected' : ''}" 
+                         onclick="selectImage(${s.id}, ${c.id}, '${c.image_url}', this)">
+                        <img src="${c.image_url}">
+                    </div>`).join('');
+                return `<div class="selection-container"><h4>مشهد ${s.scene_number}</h4><div class="images-grid">${imgs || 'في انتظار الصور...'}</div></div><hr>`;
             }).join('');
-
-            return `
-            <div class="card">
-                <h2 style="text-align:center; margin-bottom:30px;">📸 اختر أفضل لقطة لكل مشهد</h2>
-                ${scenesHTML}
-                <div style="text-align:center; position:sticky; bottom:20px;">
-                    <a href="${API_BASE}/generate-pdf/${storyId}" class="action-btn" target="_blank"
-                       style="display:inline-block; width:auto; text-decoration:none; background:#27ae60;">
-                        <i class="fas fa-file-pdf"></i> حفظ القصة PDF
-                    </a>
-                </div>
-            </div>
-            `;
+            return `<div class="card"><h2>📸 اختر الصور</h2>${html}
+                    <div style="text-align:center;"><a href="${API_BASE}/api/generate-pdf/${storyId}" class="action-btn" target="_blank" style="text-decoration:none; background:#27ae60;">حفظ القصة PDF</a></div></div>`;
         }
 
-        // === Interaction Handlers ===
+        // --- Handlers ---
 
         async function handleCreateStory(e) {
             e.preventDefault();
-            const form = e.target;
-            const btn = form.querySelector('button[type="submit"]');
-
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التأليف...';
-            btn.disabled = true;
-
-            const formData = new FormData(form);
-
+            const btn = e.target.querySelector('button');
+            btn.disabled = true; btn.innerText = "جاري التأليف...";
             try {
-                const res = await fetch(`${API_BASE}/create-story`, {
+                const res = await fetch(`${API_BASE}/api/create-story`, {
                     method: 'POST',
-                    body: formData // Sends as multipart/form-data
+                    credentials: 'include',
+                    body: new FormData(e.target)
                 });
-
-                if (res.ok) {
-                    await init(); // Reload app state
-                } else {
-                    alert('حدث خطأ أثناء إنشاء القصة');
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-magic"></i> تأليف القصة الآن';
-                }
-            } catch (err) {
-                console.error(err);
-                alert('فشل الاتصال بالسيرفر');
-                btn.disabled = false;
-            }
+                if (res.ok) await init();
+            } catch (err) { alert("خطأ في الاتصال"); btn.disabled = false; }
         }
 
         async function approveTexts() {
-            const btn = document.querySelector('button[onclick="approveTexts()"]');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
-            btn.disabled = true;
-
             const form = document.getElementById('textReviewForm');
             const formData = new FormData(form);
             const data = { storyId: formData.get('storyId'), sceneTexts: {} };
-
-            for (let [key, value] of formData.entries()) {
-                if (key.startsWith('scene_')) {
-                    const id = key.split('_')[1];
-                    data.sceneTexts[id] = value;
-                }
-            }
+            for (let [k, v] of formData.entries()) if (k.startsWith('scene_')) data.sceneTexts[k.split('_')[1]] = v;
 
             try {
-                const res = await fetch(`${API_BASE}/approve-scenes`, {
+                const res = await fetch(`${API_BASE}/api/approve-scenes`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+                    credentials: 'include',
                     body: JSON.stringify(data)
                 });
                 if (res.ok) await init();
-                else alert('حدث خطأ أثناء الحفظ');
-            } catch (e) {
-                alert('فشل الاتصال بالسيرفر');
-                btn.disabled = false;
-            }
+            } catch (err) { alert("فشل الحفظ"); }
         }
 
         async function startImageGen(id) {
-            const btn = document.querySelector('button[onclick^="startImageGen"]');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري البدء...';
-
             try {
-                const res = await fetch(`${API_BASE}/generate-images/${id}`, { method: 'POST' });
-                if (res.ok) await init();
-                else {
-                    alert('خطأ في بدء الرسم');
-                    btn.disabled = false;
-                }
-            } catch (e) {
-                console.error(e);
-                btn.disabled = false;
-            }
+                await fetch(`${API_BASE}/api/generate-images/${id}`, { 
+                    method: 'POST', 
+                    credentials: 'include',
+                    headers: { 'ngrok-skip-browser-warning': 'true' }
+                });
+                await init();
+            } catch (err) { console.error(err); }
         }
 
-        async function selectImage(sceneId, candidateId, url, imgElem) {
-            // تأثير بصري فوري
-            const parent = imgElem.parentElement;
-            parent.querySelectorAll('.img-option').forEach(i => i.classList.remove('selected'));
-            imgElem.classList.add('selected');
-
-            // إرسال للسيرفر في الخلفية
-            try {
-                await fetch(`${API_BASE}/select-image`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sceneId, candidateId, imageUrl: url })
-                });
-                // No need to reload whole page here, just saving state
-            } catch (e) {
-                console.error("Selection failed locally", e);
-            }
+        async function selectImage(sceneId, candidateId, url, el) {
+            el.parentElement.querySelectorAll('.img-option').forEach(i => i.classList.remove('selected'));
+            el.classList.add('selected');
+            await fetch(`${API_BASE}/api/select-image`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+                credentials: 'include',
+                body: JSON.stringify({ sceneId, candidateId, imageUrl: url })
+            });
         }
 
         function handleLogout() {
             window.location.href = "https://ahmedhm1.github.io/Peeka-book/index.html";
         }
     </script>
-
 </body>
-
 </html>
