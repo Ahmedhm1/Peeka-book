@@ -34,7 +34,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
         if (data.success) {
             console.log("✅ دخول ناجح! جاري التحويل...");
             localStorage.setItem("user", JSON.stringify(data.user));
-            window.location.href = "../dashboard.html";
+            window.location.href = "https://ahmedhm1.github.io/Peeka-book/";
         } else {
             throw new Error(data.message || "بيانات الدخول غير صحيحة");
         }
